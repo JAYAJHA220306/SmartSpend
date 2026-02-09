@@ -1,0 +1,14 @@
+[
+    {
+        "username": "admin",
+        "title": "Lunch",
+        "amount": 120.0,
+        "category": "Food"
+    },
+    {
+        "username": "admin",
+        "title": "Lunch",
+        "amount": 120.0,
+        "category": "Food"
+    }
+]
