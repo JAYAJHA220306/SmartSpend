@@ -1,69 +1,93 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
-from typing import Optional, Dict, List
+
+
+from fastapi import APIRouter, HTTPException, Body
+
+from pydantic import BaseModel
+from typing import List, Dict
 from utils.file_handler import read_json, write_json
 import os
 
 router = APIRouter()
-DB_PATH = os.path.join("database", "profiles.json")
 
+PROFILES_PATH = os.path.join("database", "profiles.json")
+EXPENSES_PATH = os.path.join("database", "expenses.json")
 
-class ProfileData(BaseModel):
-    user_id: str
+# Pydantic models
+class FixedExpense(BaseModel):
+    name: str
+    amount: float
+    category: str
+
+class Profile(BaseModel):
+    username: str
     first_name: str
     last_name: str
-    working_status: str = Field(..., pattern="^(student|working_professional)$")
+    working_status: str
     income: Dict[str, float]
-    fixed_expenses: Optional[Dict[str, float]] = {}
+    fixed_expenses: List[FixedExpense]
+
+# Helper to sync fixed_expenses to expenses.json
+def sync_fixed_expenses(username: str, fixed_expenses: List[Dict]):
+    expenses = read_json(EXPENSES_PATH)
+
+    # collect old variable expenses for this user
+    user_variable = [e for e in expenses if e.get("username") == username and "title" in e]
+
+    # remove old flat records of this user
+    expenses = [e for e in expenses if e.get("username") != username or "title" not in e]
+
+    # add grouped record
+    expenses.append({
+        "username": username,
+        "fixed_expenses": fixed_expenses,
+        "variable_expenses": user_variable
+    })
+
+    write_json(EXPENSES_PATH, expenses)
 
 
-def validate_income(data: ProfileData):
-    if data.working_status == "student":
-        if "allowance" not in data.income or "monthly_salary" in data.income:
-            raise HTTPException(
-                status_code=400,
-                detail="Students must have only 'allowance' in income."
-            )
+# POST /profile/create
+@router.post("/profile/create")
+def create_profile(profile: Profile = Body(...)):
+    ...
 
-    elif data.working_status == "working_professional":
-        if "monthly_salary" not in data.income or "allowance" in data.income:
-            raise HTTPException(
-                status_code=400,
-                detail="Working professionals must have only 'monthly_salary' in income."
-            )
+    profiles = read_json(PROFILES_PATH)
+
+    for p in profiles:
+        if p.get("username") == profile.username:
+            raise HTTPException(status_code=409, detail="User already exists")
 
 
-# ---------------- CREATE ----------------
-@router.post("/profile")
-def create_profile(data: ProfileData):
-    profiles: List[dict] = read_json(DB_PATH)
-    validate_income(data)
+    profiles.append(profile.dict())
+    write_json(PROFILES_PATH, profiles)
+    print(f"Profile created for {profile.username}")
 
-    for profile in profiles:
-        if profile.get("user_id") == data.user_id:
-            raise HTTPException(status_code=400, detail="Profile already exists")
+    # Sync fixed expenses
+    sync_fixed_expenses(profile.username, [fe.dict() for fe in profile.fixed_expenses])
 
-    profiles.append(data.dict())
-    write_json(DB_PATH, profiles)
+    return {"message": "Profile created successfully"}
 
-    return {"message": "Profile created", "profile": data.dict()}
+# PUT /profile/update/{username}
+@router.put("/profile/update/{username}")
+def update_profile(username: str, updated_profile: Profile = Body(...)):
+
+    profiles = read_json(PROFILES_PATH)
+    updated = False
+
+    for i, p in enumerate(profiles):
+     if p.get("username") == username:   # SAFE
+        profiles[i] = updated_profile.dict()
+        updated = True
+        break
 
 
-# ---------------- UPDATE ----------------
-@router.put("/profile/{user_id}")
-def update_profile(user_id: str, data: ProfileData):
-    profiles: List[dict] = read_json(DB_PATH)
-    validate_income(data)
+    if not updated:
+        raise HTTPException(status_code=404, detail="User not found")
 
-    for profile in profiles:
-        if profile.get("user_id") == user_id:
-            profile["first_name"] = data.first_name
-            profile["last_name"] = data.last_name
-            profile["working_status"] = data.working_status
-            profile["income"] = data.income
-            profile["fixed_expenses"] = data.fixed_expenses
+    write_json(PROFILES_PATH, profiles)
+    print(f"Profile updated for {username}")
 
-            write_json(DB_PATH, profiles)
-            return {"message": "Profile updated", "profile": profile}
+    # Sync fixed expenses
+    sync_fixed_expenses(username, [fe.dict() for fe in updated_profile.fixed_expenses])
 
-    raise HTTPException(status_code=404, detail="Profile not found")
+    return {"message": "Profile updated successfully"}

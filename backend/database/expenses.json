@@ -1,14 +1,108 @@
 [
     {
-        "username": "admin",
-        "title": "Lunch",
-        "amount": 120.0,
-        "category": "Food"
+        "username": "Vanya",
+        "title": "Groceries",
+        "amount": 1200.0,
+        "category": "food",
+        "created_at": "2026-02-10T22:16:48.847041",
+        "month": "2026-02"
     },
     {
-        "username": "admin",
-        "title": "Lunch",
-        "amount": 120.0,
-        "category": "Food"
+        "username": "Vanya",
+        "title": "Rent",
+        "amount": 9000.0,
+        "category": "housing",
+        "created_at": "2026-02-10T22:23:28.404390",
+        "month": "2026-02"
+    },
+    {
+        "username": "Vanya",
+        "title": "Coffee",
+        "amount": 150.0,
+        "category": "food",
+        "created_at": "2026-02-10T22:23:58.078836",
+        "month": "2026-02"
+    },
+    {
+        "username": "Tanmay",
+        "title": "Hostel Rent",
+        "amount": 7000.0,
+        "category": "housing",
+        "created_at": "2026-02-10T22:24:18.112292",
+        "month": "2026-02"
+    },
+    {
+        "username": "Rahul",
+        "title": "Mess Fees",
+        "amount": 2500.0,
+        "category": "food",
+        "created_at": "2026-02-10T22:24:39.714586",
+        "month": "2026-02"
+    },
+    {
+        "username": "Tanmay",
+        "title": "Mobile Recharge",
+        "amount": 399.0,
+        "category": "utilities",
+        "created_at": "2026-02-10T22:25:05.535126",
+        "month": "2026-02"
+    },
+    {
+        "username": "Tanmay",
+        "title": "Mobile Recharge",
+        "amount": 399.0,
+        "category": "utilities",
+        "created_at": "2026-02-10T22:25:08.535607",
+        "month": "2026-02"
+    },
+    {
+        "username": "Tanmay",
+        "title": "Movie Night",
+        "amount": 350.0,
+        "category": "entertainment",
+        "created_at": "2026-02-10T22:25:31.001213",
+        "month": "2026-02"
+    },
+    {
+        "username": "yash",
+        "fixed_expenses": [
+            {
+                "name": "Room Rent",
+                "amount": 12000.0,
+                "category": "Housing"
+            },
+            {
+                "name": "Internet",
+                "amount": 999.0,
+                "category": "Utilities"
+            },
+            {
+                "name": "Gym Membership",
+                "amount": 1500.0,
+                "category": "Health"
+            }
+        ],
+        "variable_expenses": []
+    },
+    {
+        "username": "yash",
+        "fixed_expenses": [
+            {
+                "name": "Room Rent",
+                "amount": 12500.0,
+                "category": "Housing"
+            },
+            {
+                "name": "Gym Membership",
+                "amount": 1500.0,
+                "category": "Health"
+            },
+            {
+                "name": "Mobile Recharge",
+                "amount": 399.0,
+                "category": "Utilities"
+            }
+        ],
+        "variable_expenses": []
     }
 ]
