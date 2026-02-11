@@ -1,5 +1,7 @@
 import streamlit as st
 import requests
+import pandas as pd
+import plotly.express as px
 from datetime import datetime
 
 BASE_URL = "http://localhost:8000"
@@ -19,7 +21,7 @@ if "current_page" not in st.session_state:
     st.session_state.current_page = "Register"
 
 # -------------------------------
-# Sidebar Navigation
+# Sidebar
 # -------------------------------
 def show_sidebar():
     st.sidebar.title("SmartSpend")
@@ -32,6 +34,7 @@ def show_sidebar():
         st.sidebar.button("Create Profile", on_click=lambda: set_page("Create Profile"))
 
     if st.session_state.logged_in:
+        st.sidebar.button("Dashboard", on_click=lambda: set_page("Dashboard"))
         st.sidebar.button("Update Profile", on_click=lambda: set_page("Update Profile"))
         st.sidebar.button("Add Expense", on_click=lambda: set_page("Add Expense"))
         st.sidebar.button("View Expense History", on_click=lambda: set_page("View Expense History"))
@@ -46,200 +49,219 @@ def logout():
     st.session_state.current_page = "Login"
 
 # -------------------------------
-# Register Page
+# API Helpers
+# -------------------------------
+def get_profile(user):
+    r = requests.get(f"{BASE_URL}/profile/{user}")
+    return r.json() if r.status_code == 200 else None
+
+def get_expenses(user):
+    r = requests.get(f"{BASE_URL}/expense/{user}")
+    return r.json().get("expenses", []) if r.status_code == 200 else []
+
+# -------------------------------
+# Register
 # -------------------------------
 def register_page():
     st.title("Register")
-    username = st.text_input("Username")
-    email = st.text_input("Email")
-    password = st.text_input("Password", type="password")
+    u = st.text_input("Username")
+    e = st.text_input("Email")
+    p = st.text_input("Password", type="password")
 
     if st.button("Register"):
-        res = requests.post(f"{BASE_URL}/register", json={
-            "username": username,
-            "email": email,
-            "password": password
-        })
-        if res.status_code == 200:
-            st.success("Registered successfully!")
+        r = requests.post(f"{BASE_URL}/register", json={"username": u, "email": e, "password": p})
+        if r.status_code == 200:
+            st.success("Registered!")
             st.session_state.registered = True
-            st.session_state.user = username
+            st.session_state.user = u
             set_page("Create Profile")
         else:
-            st.error(res.json().get("detail", "Registration failed"))
+            st.error(r.text)
 
 # -------------------------------
-# Create Profile Page
+# Create Profile
 # -------------------------------
 def create_profile_page():
     st.title("Create Profile")
-    first_name = st.text_input("First Name")
-    last_name = st.text_input("Last Name")
+    first = st.text_input("First Name")
+    last = st.text_input("Last Name")
     status = st.selectbox("Working Status", ["student", "working_professional"])
 
     if status == "student":
-        allowance = st.number_input("Monthly Allowance", min_value=0.0)
-        income = {"allowance": allowance}
+        income = {"allowance": st.number_input("Monthly Allowance", min_value=0.0)}
     else:
-        salary = st.number_input("Monthly Salary", min_value=0.0)
-        income = {"monthly_salary": salary}
+        income = {"monthly_salary": st.number_input("Monthly Salary", min_value=0.0)}
 
     st.subheader("Fixed Expenses")
-    fixed_expenses = []
+    fixed = []
     for i in range(3):
-        name = st.text_input(f"Expense {i+1} Name", key=f"name_{i}")
-        amount = st.number_input("Amount", key=f"amount_{i}", min_value=0.0)
-        category = st.text_input("Category", key=f"cat_{i}")
-        if name and category:
-            fixed_expenses.append({"name": name, "amount": amount, "category": category})
+        with st.expander(f"Expense {i+1}", expanded=True):
+            n = st.text_input("Name", key=f"cname{i}")
+            a = st.number_input("Amount", min_value=0.0, key=f"camt{i}")
+            c = st.text_input("Category", key=f"ccat{i}")
+            if n and c:
+                fixed.append({"name": n, "amount": a, "category": c})
 
     if st.button("Create Profile"):
-        res = requests.post(f"{BASE_URL}/profile/create", json={
+        r = requests.post(f"{BASE_URL}/profile/create", json={
             "username": st.session_state.user,
-            "first_name": first_name,
-            "last_name": last_name,
+            "first_name": first,
+            "last_name": last,
             "working_status": status,
             "income": income,
-            "fixed_expenses": fixed_expenses
+            "fixed_expenses": fixed
         })
-        if res.status_code == 200:
-            st.success("Profile created!")
+        if r.status_code == 200:
+            st.success("Profile created")
             st.session_state.profile_created = True
             set_page("Login")
         else:
-            st.error(res.json().get("detail", "Profile creation failed"))
+            st.error(r.text)
 
 # -------------------------------
-# Login Page
+# Login
 # -------------------------------
 def login_page():
     st.title("Login")
-    identifier = st.text_input("Username or Email")
-    password = st.text_input("Password", type="password")
+    i = st.text_input("Username or Email")
+    p = st.text_input("Password", type="password")
 
     if st.button("Login"):
-        res = requests.post(f"{BASE_URL}/login", json={
-            "identifier": identifier,
-            "password": password
-        })
-        if res.status_code == 200:
-            st.success("Login successful!")
+        r = requests.post(f"{BASE_URL}/login", json={"identifier": i, "password": p})
+        if r.status_code == 200:
+            st.success("Logged in!")
             st.session_state.logged_in = True
-            st.session_state.user = res.json()["username"]
-            set_page("View Expense History")
+            st.session_state.user = r.json()["username"]
+            set_page("Dashboard")
             st.rerun()
         else:
-            st.error(res.json().get("detail", "Login failed"))
+            st.error(r.text)
 
 # -------------------------------
-# Update Profile Page (FIXED)
+# Dashboard
+# -------------------------------
+def dashboard_page():
+    st.title("📊 SmartSpend Dashboard")
+
+    profile = get_profile(st.session_state.user)
+    expenses = get_expenses(st.session_state.user)
+
+    months = sorted({e["month"] for e in expenses}, reverse=True)
+    cur = datetime.now().strftime("%Y-%m")
+    if cur not in months:
+        months.insert(0, cur)
+
+    month = st.selectbox("Select Month", months)
+
+    salary = profile["income"].get("monthly_salary") or profile["income"].get("allowance") or 0
+    monthly = [e for e in expenses if e["month"] == month]
+    spent = sum(e["amount"] for e in monthly)
+    remaining = salary - spent
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        pie = pd.DataFrame({"Status": ["Spent", "Remaining"], "Amount": [spent, max(0, remaining)]})
+        st.plotly_chart(px.pie(pie, names="Status", values="Amount"), use_container_width=True)
+
+    with col2:
+        if monthly:
+            df = pd.DataFrame(monthly)
+            df["created_at"] = pd.to_datetime(df["created_at"])
+            df["date"] = df["created_at"].dt.date
+            trend = df.groupby("date")["amount"].sum().reset_index()
+            st.line_chart(trend.set_index("date"))
+        else:
+            st.info("No expenses yet")
+
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Income", f"₹{salary}")
+    c2.metric("Spent", f"₹{spent}")
+    c3.metric("Remaining", f"₹{remaining}")
+
+# -------------------------------
+# Update Profile (RESTORED)
 # -------------------------------
 def update_profile_page():
     st.title("Update Profile")
+    p = get_profile(st.session_state.user)
 
-    res = requests.get(f"{BASE_URL}/profile/{st.session_state.user}")
-    if res.status_code != 200:
-        st.error("Profile not found")
-        return
+    first = st.text_input("First Name", p["first_name"])
+    last = st.text_input("Last Name", p["last_name"])
 
-    profile = res.json()
-
-    first_name = st.text_input("First Name", value=profile["first_name"])
-    last_name = st.text_input("Last Name", value=profile["last_name"])
-    status = st.selectbox(
-        "Working Status",
-        ["student", "working_professional"],
-        index=0 if profile["working_status"] == "student" else 1
-    )
+    status = st.selectbox("Working Status", ["student", "working_professional"],
+                          index=0 if p["working_status"] == "student" else 1)
 
     if status == "student":
-        allowance = st.number_input("Monthly Allowance", value=profile["income"].get("allowance", 0.0))
-        income = {"allowance": allowance}
+        income = {"allowance": st.number_input("Monthly Allowance", p["income"].get("allowance", 0.0))}
     else:
-        salary = st.number_input("Monthly Salary", value=profile["income"].get("monthly_salary", 0.0))
-        income = {"monthly_salary": salary}
+        income = {"monthly_salary": st.number_input("Monthly Salary", p["income"].get("monthly_salary", 0.0))}
 
     st.subheader("Fixed Expenses")
-    fixed_expenses = []
-    existing = profile.get("fixed_expenses", [])
+    fixed = []
+    existing = p.get("fixed_expenses", [])
+    for i in range(max(3, len(existing))):
+        d = existing[i] if i < len(existing) else {"name": "", "amount": 0, "category": ""}
+        with st.expander(f"Expense {i+1}", expanded=True):
+            n = st.text_input("Name", d["name"], key=f"upn{i}")
+            a = st.number_input(
+    "Amount",
+    value=float(d["amount"]),
+    min_value=0.0,
+    key=f"up_amount_{i}"
+)
 
-    for i in range(3):
-        data = existing[i] if i < len(existing) else {"name": "", "amount": 0.0, "category": ""}
-        name = st.text_input(f"Expense {i+1} Name", value=data["name"], key=f"up_name_{i}")
-        amount = st.number_input("Amount", value=data["amount"], key=f"up_amount_{i}", min_value=0.0)
-        category = st.text_input("Category", value=data["category"], key=f"up_cat_{i}")
-        if name and category:
-            fixed_expenses.append({"name": name, "amount": amount, "category": category})
+            c = st.text_input("Category", d["category"], key=f"upc{i}")
+            if n and c:
+                fixed.append({"name": n, "amount": a, "category": c})
 
-    if st.button("Update Profile"):
-        res = requests.put(
-            f"{BASE_URL}/profile/update/{st.session_state.user}",
-            json={
-                "username": st.session_state.user,
-                "first_name": first_name,
-                "last_name": last_name,
-                "working_status": status,
-                "income": income,
-                "fixed_expenses": fixed_expenses
-            }
-        )
-        if res.status_code == 200:
-            st.success("Profile updated!")
+    if st.button("Update"):
+        r = requests.put(f"{BASE_URL}/profile/update/{st.session_state.user}", json={
+            "username": st.session_state.user,
+            "first_name": first,
+            "last_name": last,
+            "working_status": status,
+            "income": income,
+            "fixed_expenses": fixed
+        })
+        if r.status_code == 200:
+            st.success("Updated!")
+            st.rerun()
         else:
-            st.error(res.json().get("detail", "Update failed"))
+            st.error(r.text)
 
 # -------------------------------
-# Add Expense Page
+# Add Expense
 # -------------------------------
 def add_expense_page():
     st.title("Add Expense")
-    title = st.text_input("Title")
-    amount = st.number_input("Amount", min_value=0.0)
-    category = st.text_input("Category")
+    t = st.text_input("Title")
+    a = st.number_input("Amount", min_value=0.0)
+    c = st.text_input("Category")
 
     if st.button("Add"):
-        res = requests.post(
-            f"{BASE_URL}/add-expense",
-            json={
-                "username": st.session_state.user,
-                "title": title,
-                "amount": amount,
-                "category": category
-            }
-        )
-        if res.status_code == 200:
-            st.success("Expense added")
+        r = requests.post(f"{BASE_URL}/add-expense", json={
+            "username": st.session_state.user,
+            "title": t,
+            "amount": a,
+            "category": c
+        })
+        if r.status_code == 200:
+            st.success("Added!")
+            st.rerun()
         else:
-            st.error(res.text)
+            st.error(r.text)
 
 # -------------------------------
-# View Expense History Page
+# View History
 # -------------------------------
 def view_expense_history_page():
     st.title("Expense History")
-
-    res = requests.get(f"{BASE_URL}/expense/{st.session_state.user}")
-    if res.status_code != 200:
-        st.error("Could not load expenses")
+    data = get_expenses(st.session_state.user)
+    if not data:
+        st.info("No expenses yet")
         return
-
-    expenses = res.json()["expenses"]
-
-    if not expenses:
-        st.info("No expenses found yet.")
-        return
-
-    for e in expenses:
-        e["type"] = "Fixed" if e["category"] == "fixed" else "Variable"
-        e["month_display"] = datetime.strptime(e["month"], "%Y-%m").strftime("%b %Y")
-
-    months = sorted(set(e["month_display"] for e in expenses), reverse=True)
-    selected_month = st.selectbox("Select Month", months)
-
-    filtered = [e for e in expenses if e["month_display"] == selected_month]
-    filtered.sort(key=lambda x: x["created_at"], reverse=True)
-
-    st.dataframe(filtered, use_container_width=True)
+    st.dataframe(pd.DataFrame(data), use_container_width=True)
 
 # -------------------------------
 # Router
@@ -252,10 +274,11 @@ elif st.session_state.current_page == "Create Profile":
     create_profile_page()
 elif st.session_state.current_page == "Login":
     login_page()
+elif st.session_state.current_page == "Dashboard":
+    dashboard_page()
 elif st.session_state.current_page == "Update Profile":
     update_profile_page()
 elif st.session_state.current_page == "Add Expense":
     add_expense_page()
 elif st.session_state.current_page == "View Expense History":
     view_expense_history_page()
-

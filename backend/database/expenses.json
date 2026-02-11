@@ -65,10 +65,50 @@
     },
     {
         "username": "vanya",
+        "title": "shopping ",
+        "amount": 1000.0,
+        "category": "miscellaneous",
+        "created_at": "2026-02-11T23:43:07.347218",
+        "month": "2026-02"
+    },
+    {
+        "username": "vanya",
+        "title": "clothes ",
+        "amount": 1500.0,
+        "category": "miscellaneous",
+        "created_at": "2026-02-11T23:56:16.336247",
+        "month": "2026-02"
+    },
+    {
+        "username": "vanya",
+        "title": "dinner ",
+        "amount": 500.0,
+        "category": "food",
+        "created_at": "2026-02-11T23:56:32.797086",
+        "month": "2026-02"
+    },
+    {
+        "username": "vanya",
+        "title": "novels",
+        "amount": 500.0,
+        "category": "miscellaneous",
+        "created_at": "2026-02-11T23:57:21.412295",
+        "month": "2026-02"
+    },
+    {
+        "username": "vanya",
+        "title": "printouts",
+        "amount": 100.0,
+        "category": "college",
+        "created_at": "2026-02-12T00:24:24.350581",
+        "month": "2026-02"
+    },
+    {
+        "username": "vanya",
         "title": "recharge ",
         "amount": 699.0,
         "category": "fixed",
-        "created_at": "2026-02-11T20:23:57.806430",
+        "created_at": "2026-02-12T00:25:16.408228",
         "month": "2026-02"
     }
 ]
