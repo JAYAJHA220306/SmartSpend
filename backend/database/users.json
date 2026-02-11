@@ -1,12 +1,17 @@
 [
     {
         "username": "vanya",
-        "email": "vanya@gmail.com",
-        "password": "New@1234"
+        "email": "vanyanegi_vn@gmail.com",
+        "password": "Vanya#1234"
     },
     {
-        "username": "anita",
-        "email": "anita@mail.com",
-        "password": "Lola#156"
+        "username": "yash",
+        "email": "yash_sharma12@gmail.com",
+        "password": "Yash@1411"
+    },
+    {
+        "username": "pooja",
+        "email": "poojanasre@gmail.com",
+        "password": "Pandra@123"
     }
 ]

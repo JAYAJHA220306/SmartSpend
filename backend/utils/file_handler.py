@@ -1,12 +1,22 @@
 import json
 import os
 
-def read_json(file_path):
-    if not os.path.exists(file_path):
+def read_json(path):
+    if not os.path.exists(path):
         return []
-    with open(file_path, "r") as f:
-        return json.load(f)
 
-def write_json(file_path, data):
-    with open(file_path, "w") as f:
+    with open(path, "r") as f:
+        try:
+            data = json.load(f)
+            if isinstance(data, list):
+                return data
+            return []
+        except json.JSONDecodeError:
+            return []
+
+
+def write_json(path, data):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
         json.dump(data, f, indent=4)
+
