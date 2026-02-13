@@ -7,12 +7,18 @@ from datetime import datetime
 
 router = APIRouter()
 
-PROFILES_PATH = os.path.join("database", "profiles.json")
-EXPENSES_PATH = os.path.join("database", "expenses.json")
+# -------- PATH FIX --------
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))  # backend/
+PROFILES_PATH = os.path.join(BASE_DIR, "database", "profiles.json")
+EXPENSES_PATH = os.path.join(BASE_DIR, "database", "expenses.json")
 
-# -------------------------------
-# Pydantic Models
-# -------------------------------
+os.makedirs(os.path.dirname(PROFILES_PATH), exist_ok=True)
+if not os.path.exists(PROFILES_PATH):
+    write_json(PROFILES_PATH, [])
+if not os.path.exists(EXPENSES_PATH):
+    write_json(EXPENSES_PATH, [])
+# --------------------------
+
 class FixedExpense(BaseModel):
     name: str
     amount: float
@@ -25,13 +31,10 @@ class Profile(BaseModel):
     income: Dict[str, float]
     fixed_expenses: List[FixedExpense]
 
-# -------------------------------
-# Helper: Sync fixed_expenses to expenses.json
-# -------------------------------
+
 def sync_fixed_expenses(username: str, fixed_expenses: List[Dict]):
     expenses = read_json(EXPENSES_PATH)
 
-    # Remove old fixed expenses for this user
     expenses = [
         e for e in expenses
         if not (e.get("username") == username and e.get("category") == "fixed")
@@ -40,7 +43,6 @@ def sync_fixed_expenses(username: str, fixed_expenses: List[Dict]):
     now = datetime.now()
     month = now.strftime("%Y-%m")
 
-    # Add new fixed expenses
     for fx in fixed_expenses:
         expenses.append({
             "username": username,
@@ -54,9 +56,7 @@ def sync_fixed_expenses(username: str, fixed_expenses: List[Dict]):
     write_json(EXPENSES_PATH, expenses)
     print(f"Fixed expenses synced for {username}")
 
-# -------------------------------
-# POST /profile/create
-# -------------------------------
+
 @router.post("/profile/create")
 def create_profile(profile: dict = Body(...)):
     profiles = read_json(PROFILES_PATH)
@@ -68,16 +68,11 @@ def create_profile(profile: dict = Body(...)):
     profiles.append(profile)
     write_json(PROFILES_PATH, profiles)
 
-    sync_fixed_expenses(
-        profile["username"],
-        profile.get("fixed_expenses", [])
-    )
+    sync_fixed_expenses(profile["username"], profile.get("fixed_expenses", []))
 
     return {"message": "Profile created successfully"}
 
-# -------------------------------
-# GET /profile/{username}   ✅ REQUIRED FOR UPDATE PAGE
-# -------------------------------
+
 @router.get("/profile/{username}")
 def get_profile(username: str = Path(...)):
     profiles = read_json(PROFILES_PATH)
@@ -88,9 +83,7 @@ def get_profile(username: str = Path(...)):
 
     raise HTTPException(status_code=404, detail="Profile not found")
 
-# -------------------------------
-# PUT /profile/update/{username}
-# -------------------------------
+
 @router.put("/profile/update/{username}")
 def update_profile(
     username: str = Path(...),
@@ -102,7 +95,7 @@ def update_profile(
     for i, p in enumerate(profiles):
         if p.get("username") == username:
             data = updated_profile.dict()
-            data["username"] = username   # KEEP original username
+            data["username"] = username
             profiles[i] = data
             updated = True
             break
@@ -118,3 +111,4 @@ def update_profile(
     )
 
     return {"message": "Profile updated successfully"}
+

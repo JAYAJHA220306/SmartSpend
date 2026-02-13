@@ -9,10 +9,6 @@ BASE_URL = "http://localhost:8000"
 # -------------------------------
 # Session State Initialization
 # -------------------------------
-if "registered" not in st.session_state:
-    st.session_state.registered = False
-if "profile_created" not in st.session_state:
-    st.session_state.profile_created = False
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "user" not in st.session_state:
@@ -30,14 +26,17 @@ def show_sidebar():
         st.sidebar.button("Register", on_click=lambda: set_page("Register"))
         st.sidebar.button("Login", on_click=lambda: set_page("Login"))
 
-    if st.session_state.registered and not st.session_state.profile_created:
-        st.sidebar.button("Create Profile", on_click=lambda: set_page("Create Profile"))
-
     if st.session_state.logged_in:
-        st.sidebar.button("Dashboard", on_click=lambda: set_page("Dashboard"))
-        st.sidebar.button("Update Profile", on_click=lambda: set_page("Update Profile"))
-        st.sidebar.button("Add Expense", on_click=lambda: set_page("Add Expense"))
-        st.sidebar.button("View Expense History", on_click=lambda: set_page("View Expense History"))
+        profile = get_profile(st.session_state.user)
+
+        if not profile:
+            st.sidebar.button("Create Profile", on_click=lambda: set_page("Create Profile"))
+        else:
+            st.sidebar.button("Dashboard", on_click=lambda: set_page("Dashboard"))
+            st.sidebar.button("Update Profile", on_click=lambda: set_page("Update Profile"))
+            st.sidebar.button("Add Expense", on_click=lambda: set_page("Add Expense"))
+            st.sidebar.button("View Expense History", on_click=lambda: set_page("View Expense History"))
+
         st.sidebar.button("Logout", on_click=logout)
 
 def set_page(page):
@@ -71,10 +70,8 @@ def register_page():
     if st.button("Register"):
         r = requests.post(f"{BASE_URL}/register", json={"username": u, "email": e, "password": p})
         if r.status_code == 200:
-            st.success("Registered!")
-            st.session_state.registered = True
-            st.session_state.user = u
-            set_page("Create Profile")
+            st.success("Registered! Please login.")
+            set_page("Login")
         else:
             st.error(r.text)
 
@@ -112,9 +109,9 @@ def create_profile_page():
             "fixed_expenses": fixed
         })
         if r.status_code == 200:
-            st.success("Profile created")
-            st.session_state.profile_created = True
-            set_page("Login")
+            st.success("Profile created!")
+            set_page("Dashboard")
+            st.rerun()
         else:
             st.error(r.text)
 
@@ -145,6 +142,11 @@ def dashboard_page():
 
     profile = get_profile(st.session_state.user)
     expenses = get_expenses(st.session_state.user)
+
+    if not profile:
+        st.warning("Please create your profile first.")
+        set_page("Create Profile")
+        st.rerun()
 
     months = sorted({e["month"] for e in expenses}, reverse=True)
     cur = datetime.now().strftime("%Y-%m")
@@ -180,7 +182,7 @@ def dashboard_page():
     c3.metric("Remaining", f"₹{remaining}")
 
 # -------------------------------
-# Update Profile (RESTORED)
+# Update Profile
 # -------------------------------
 def update_profile_page():
     st.title("Update Profile")
@@ -204,12 +206,7 @@ def update_profile_page():
         d = existing[i] if i < len(existing) else {"name": "", "amount": 0, "category": ""}
         with st.expander(f"Expense {i+1}", expanded=True):
             n = st.text_input("Name", d["name"], key=f"upn{i}")
-            a = st.number_input(
-    "Amount",
-    value=float(d["amount"]),
-    min_value=0.0,
-    key=f"up_amount_{i}"
-)
+            a = st.number_input("Amount", value=float(d["amount"]), min_value=0.0, key=f"upa{i}")
 
             c = st.text_input("Category", d["category"], key=f"upc{i}")
             if n and c:
@@ -282,3 +279,4 @@ elif st.session_state.current_page == "Add Expense":
     add_expense_page()
 elif st.session_state.current_page == "View Expense History":
     view_expense_history_page()
+

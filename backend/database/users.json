@@ -13,5 +13,25 @@
         "username": "pooja",
         "email": "poojanasre@gmail.com",
         "password": "Pandra@123"
+    },
+    {
+        "username": "antara ",
+        "email": "antara_p@gmail.com",
+        "password": "Atp@1234"
+    },
+    {
+        "username": "antara",
+        "email": "antarap12@gmail.com",
+        "password": "Antara@123"
+    },
+    {
+        "username": "swarnali",
+        "email": "swarnalibarai@gmail.com",
+        "password": "Swaranali#123"
+    },
+    {
+        "username": "preyashi",
+        "email": "preyashi@123gmail.com",
+        "password": "Preyashi#123"
     }
 ]

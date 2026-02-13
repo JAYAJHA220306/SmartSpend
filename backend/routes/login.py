@@ -5,7 +5,15 @@ import os
 import re
 
 router = APIRouter()
-DB_PATH = os.path.join("database", "users.json")
+
+# -------- PATH FIX (ONLY CHANGE) --------
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))  # backend/
+DB_PATH = os.path.join(BASE_DIR, "database", "users.json")
+
+os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+if not os.path.exists(DB_PATH):
+    write_json(DB_PATH, [])
+# ---------------------------------------
 
 # Input models
 class RegisterData(BaseModel):
@@ -33,27 +41,24 @@ def is_valid_password(password: str) -> bool:
         return False
     return True
 
-# Ensure users.json exists
-if not os.path.exists(DB_PATH):
-    write_json(DB_PATH, [])
-
 # Register endpoint
 @router.post("/register")
 def register(data: RegisterData):
     users = read_json(DB_PATH)
 
-    # Check for existing username or email
     for user in users:
         if user.get("username") == data.username or user.get("email") == data.email:
-
             raise HTTPException(status_code=409, detail="User already exists")
 
-    # Validate password
     if not is_valid_password(data.password):
-        raise HTTPException(status_code=400, detail="Password must be at least 8 characters, include 1 uppercase, 1 lowercase, and 1 special character (!@#$%^&*)")
+        raise HTTPException(
+            status_code=400,
+            detail="Password must be at least 8 characters, include 1 uppercase, 1 lowercase, and 1 special character (!@#$%^&*)"
+        )
 
     users.append(data.dict())
     write_json(DB_PATH, users)
+
     print(f"User registered: {data.username}")
     return {"message": "Registration successful", "username": data.username}
 
@@ -79,7 +84,10 @@ def reset_password(data: ResetPasswordData):
     updated = False
 
     if not is_valid_password(data.new_password):
-        raise HTTPException(status_code=400, detail="Password must be at least 8 characters, include 1 uppercase, 1 lowercase, and 1 special character (!@#$%^&*)")
+        raise HTTPException(
+            status_code=400,
+            detail="Password must be at least 8 characters, include 1 uppercase, 1 lowercase, and 1 special character (!@#$%^&*)"
+        )
 
     for user in users:
         if data.identifier == user["username"] or data.identifier == user["email"]:

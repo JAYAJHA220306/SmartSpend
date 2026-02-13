@@ -4,13 +4,18 @@
         "last_name": "Negi",
         "working_status": "student",
         "income": {
-            "allowance": 6000.0
+            "allowance": 8000.0
         },
         "fixed_expenses": [
             {
                 "name": "recharge ",
                 "amount": 699.0,
                 "category": "mobile bill"
+            },
+            {
+                "name": "netflix ",
+                "amount": 299.0,
+                "category": "susbcription "
             }
         ],
         "username": "vanya"
@@ -51,5 +56,47 @@
                 "category": "mobile payments "
             }
         ]
+    },
+    {
+        "first_name": "Swarnali ",
+        "last_name": "Barai",
+        "working_status": "student",
+        "income": {
+            "allowance": 7000.0
+        },
+        "fixed_expenses": [
+            {
+                "name": "recharge",
+                "amount": 699.0,
+                "category": "mobile payment"
+            },
+            {
+                "name": "netflix ",
+                "amount": 299.0,
+                "category": "subscriptions"
+            }
+        ],
+        "username": "swarnali"
+    },
+    {
+        "first_name": "Preyashi ",
+        "last_name": "Agarwal",
+        "working_status": "student",
+        "income": {
+            "allowance": 10000.0
+        },
+        "fixed_expenses": [
+            {
+                "name": "amazon",
+                "amount": 1299.0,
+                "category": "subscriptions"
+            },
+            {
+                "name": "mobile ",
+                "amount": 699.0,
+                "category": "recharge"
+            }
+        ],
+        "username": "preyashi"
     }
 ]

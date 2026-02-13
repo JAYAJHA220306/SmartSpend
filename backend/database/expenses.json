@@ -104,11 +104,67 @@
         "month": "2026-02"
     },
     {
+        "username": "swarnali",
+        "title": "recharge",
+        "amount": 699.0,
+        "category": "fixed",
+        "created_at": "2026-02-12T11:14:56.471143",
+        "month": "2026-02"
+    },
+    {
+        "username": "swarnali",
+        "title": "netflix ",
+        "amount": 299.0,
+        "category": "fixed",
+        "created_at": "2026-02-12T11:14:56.471143",
+        "month": "2026-02"
+    },
+    {
+        "username": "preyashi",
+        "title": "amazon",
+        "amount": 1299.0,
+        "category": "fixed",
+        "created_at": "2026-02-12T11:20:36.959424",
+        "month": "2026-02"
+    },
+    {
+        "username": "preyashi",
+        "title": "mobile ",
+        "amount": 699.0,
+        "category": "fixed",
+        "created_at": "2026-02-12T11:20:36.959424",
+        "month": "2026-02"
+    },
+    {
+        "username": "preyashi",
+        "title": "shopping",
+        "amount": 1500.0,
+        "category": "miscellaneous",
+        "created_at": "2026-02-12T11:21:31.587925",
+        "month": "2026-02"
+    },
+    {
+        "username": "vanya",
+        "title": "tickets ",
+        "amount": 500.0,
+        "category": "miscellaneous",
+        "created_at": "2026-02-12T11:57:28.274115",
+        "month": "2026-02"
+    },
+    {
         "username": "vanya",
         "title": "recharge ",
         "amount": 699.0,
         "category": "fixed",
-        "created_at": "2026-02-12T00:25:16.408228",
+        "created_at": "2026-02-12T13:18:06.599180",
+        "month": "2026-02"
+    },
+    {
+        "username": "vanya",
+        "title": "netflix ",
+        "amount": 299.0,
+        "category": "fixed",
+        "created_at": "2026-02-12T13:18:06.599180",
         "month": "2026-02"
     }
 ]
