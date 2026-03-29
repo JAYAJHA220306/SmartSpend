@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
-from utils.file_handler import read_json, write_json
+from backend.utils.file_handler import read_json, write_json
 import os
 import re
 

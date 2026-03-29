@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Body, Path
 from pydantic import BaseModel
 from typing import List, Dict
-from utils.file_handler import read_json, write_json
+from backend.utils.file_handler import read_json, write_json
 import os
 from datetime import datetime
 

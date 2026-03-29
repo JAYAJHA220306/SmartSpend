@@ -98,5 +98,15 @@
             }
         ],
         "username": "preyashi"
+    },
+    {
+        "username": "jaya",
+        "first_name": "Jaya",
+        "last_name": "",
+        "working_status": "student",
+        "income": {
+            "allowance": 5000.0
+        },
+        "fixed_expenses": []
     }
 ]
